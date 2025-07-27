@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlavourBites - Online Vendor Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+    .category-btn.active {
+        border-color: #f59e0b;
+        color: #f59e0b;
+        font-weight: 600;
+    }
+    .wishlist-btn.active svg {
+        fill: #ef4444;
+        stroke: #ef4444;
+    }
+    .sidebar, .sidebar-overlay, .modal-overlay {
+        transition: all 0.3s ease-in-out;
+    }
+    .payment-option.selected {
+      border-color: #f59e0b;
+      background-color: #fffbeb;
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+  <!-- Main Application Container -->
+  <div id="app-container">
+
+    <!-- Product Listing View -->
+    <div id="product-view">
+      <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+          <div class="flex justify-between items-center py-3">
+            <h1 class="text-3xl font-extrabold text-gray-800">FlavourBites</h1>
+            <div class="flex-grow max-w-xl mx-4">
+              <div class="relative">
+                <input type="search" id="search-bar" placeholder="Search for raw materials..." class="w-full bg-gray-100 border-2 border-gray-200 rounded-lg py-2.5 pl-4 pr-10 focus:outline-none focus:border-yellow-500 transition-colors">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-6">
+              <button id="profile-nav-btn" class="text-gray-600 hover:text-yellow-500 transition-colors">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              </button>
+              <button id="wishlist-nav-btn" class="relative text-gray-600 hover:text-yellow-500 transition-colors">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"></path></svg>
+                 <span id="wishlist-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+              </button>
+              <button id="cart-nav-btn" class="relative text-gray-600 hover:text-yellow-500 transition-colors">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+              </button>
+            </div>
+          </div>
+          <nav id="category-nav" class="flex justify-center space-x-8 py-2 border-t border-gray-200 overflow-x-auto"></nav>
+        </div>
+      </header>
+      <main class="container mx-auto px-4 py-8">
+        <h2 id="page-title" class="text-3xl font-bold mb-6 text-gray-800">All Products</h2>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+      </main>
+    </div>
+
+    <!-- Checkout View (Initially Hidden) -->
+    <div id="checkout-view" class="hidden">
+      <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-4">
+            <div class="flex items-center gap-4">
+               <button id="back-to-shop-btn" class="text-gray-600 hover:text-gray-900">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+               </button>
+               <h1 class="text-3xl font-extrabold text-gray-800">FlavourBites</h1>
+            </div>
+            <div class="flex items-center space-x-2 text-gray-500">
+              <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              <span class="font-semibold">SECURE CHECKOUT</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h2 class="text-xl font-bold mb-4 text-gray-800">Delivery Address</h2>
+              <div id="delivery-address-display" class="border border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p id="display-name" class="font-bold"></p>
+                    <p id="display-address" class="text-gray-600 text-sm"></p>
+                    <p id="display-phone" class="text-gray-600 text-sm mt-1"></p>
+                  </div>
+                  <button id="change-address-btn" class="text-sm font-semibold text-yellow-600 hover:text-yellow-700">Change</button>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h2 class="text-xl font-bold mb-4 text-gray-800">Select Delivery Slot</h2>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <label class="border rounded-lg p-3 text-center cursor-pointer hover:border-yellow-500 has-[:checked]:bg-yellow-50 has-[:checked]:border-yellow-500">
+                  <input type="radio" name="delivery-slot" class="hidden" value="Morning"><span class="font-semibold block">Morning</span><span class="text-sm text-gray-500">9 AM - 12 PM</span>
+                </label>
+                <label class="border rounded-lg p-3 text-center cursor-pointer hover:border-yellow-500 has-[:checked]:bg-yellow-50 has-[:checked]:border-yellow-500">
+                  <input type="radio" name="delivery-slot" class="hidden" value="Afternoon" checked><span class="font-semibold block">Afternoon</span><span class="text-sm text-gray-500">1 PM - 4 PM</span>
+                </label>
+                <label class="border rounded-lg p-3 text-center cursor-pointer hover:border-yellow-500 has-[:checked]:bg-yellow-50 has-[:checked]:border-yellow-500">
+                  <input type="radio" name="delivery-slot" class="hidden" value="Evening"><span class="font-semibold block">Evening</span><span class="text-sm text-gray-500">6 PM - 9 PM</span>
+                </label>
+              </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h2 class="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
+              <div class="space-y-4">
+                <div class="payment-option border-2 border-gray-200 rounded-lg p-4 cursor-pointer selected"><h3 class="font-semibold">UPI (Pay on Delivery)</h3><p class="text-sm text-gray-500">Pay with your UPI app at the time of delivery</p></div>
+                <div class="payment-option border-2 border-gray-200 rounded-lg p-4 cursor-pointer"><h3 class="font-semibold">Cash on Delivery</h3><p class="text-sm text-gray-500">Pay in cash at the time of delivery</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-1">
+            <div class="bg-white p-6 rounded-lg shadow sticky top-28">
+              <h2 class="text-xl font-bold mb-4 pb-4 border-b text-gray-800">Order Summary</h2>
+              <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex justify-between">
+                  <span id="summary-item-count">Item Total (0 items)</span>
+                  <span id="summary-item-total" class="font-semibold">₹0.00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Delivery Fee</span>
+                  <span class="font-semibold text-green-600">FREE</span>
+                </div>
+                 <div class="flex justify-between text-gray-800 pt-4 border-t">
+                  <span class="text-lg font-bold">Grand Total</span>
+                  <span id="summary-grand-total" class="text-lg font-bold">₹0.00</span>
+                </div>
+              </div>
+              <button id="place-order-btn" class="w-full mt-6 bg-yellow-500 text-white font-bold py-3 rounded-lg hover:bg-yellow-600 transition-colors text-lg">Place Order</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0"></div>
+    <div id="profile-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl z-50 w-full max-w-md hidden transform scale-95 opacity-0 transition-all duration-300">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-xl font-bold">My Profile</h2>
+        <button id="close-profile-modal-btn" class="text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
+      </div>
+      <div class="p-6">
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label for="profile-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+            <input type="text" id="profile-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="profile-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input type="tel" id="profile-phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm">
+          </div>
+          <div>
+            <label for="profile-address" class="block text-sm font-medium text-gray-700">Address</label>
+            <textarea id="profile-address" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 sm:text-sm"></textarea>
+          </div>
+          <div class="flex justify-end pt-4 space-x-3">
+            <button type="button" id="cancel-profile-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sidebars and Toast (shared between views) -->
+    <div id="wishlist-overlay" class="sidebar-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0"></div>
+    <div id="wishlist-sidebar" class="sidebar fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold">My Wishlist</h2>
+            <button id="close-wishlist-btn" class="text-gray-600 hover:text-gray-900"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div id="wishlist-items-container" class="flex-grow p-4 overflow-y-auto">
+            <div id="empty-wishlist-message" class="text-center text-gray-500 mt-10">Your wishlist is empty.</div>
+        </div>
+    </div>
+    <div id="cart-overlay" class="sidebar-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0"></div>
+    <div id="cart-sidebar" class="sidebar fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold">My Cart</h2>
+            <button id="close-cart-btn" class="text-gray-600 hover:text-gray-900"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div id="cart-items-container" class="flex-grow p-4 overflow-y-auto">
+            <div id="empty-cart-message" class="text-center text-gray-500 mt-10">Your cart is empty.</div>
+        </div>
+        <div class="p-4 border-t bg-gray-50">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-lg font-semibold">Grand Total:</span>
+                <span id="grand-total" class="text-xl font-bold text-green-600">₹0.00</span>
+            </div>
+            <button id="proceed-to-checkout-btn" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg hover:bg-yellow-600 transition-colors">Proceed to Checkout</button>
+        </div>
+    </div>
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-24 opacity-0 transition-all duration-300"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- DATA ---
+      const products = [
+        { id: 1, name: "Big Onions", unit: "5kg", supplier: "VegMart", price: 200.00, imageUrl: "https://t4.ftcdn.net/jpg/04/32/30/55/240_F_432305577_JB4kKOPESHH2gZculYUZlj5U2vCbdjxn.jpg", category: "Vegetables", rating: 4.5 },
+        { id: 2, name: "Potatoes", unit: "5kg", supplier: "FarmFresh", price: 190.00, imageUrl: "https://t4.ftcdn.net/jpg/01/59/50/55/240_F_159505511_B4dRlwRuvRzVVGVIFokgqyHQ7AQyKSiL.jpg", category: "Vegetables", rating: 4.7 },
+        { id: 3, name: "Tomatoes", unit: "5kg", supplier: "AgriBazaar", price: 220.00, imageUrl: "https://t3.ftcdn.net/jpg/02/11/61/26/240_F_211612672_UGOUUVHr6X9YdZnDXiw1p0tPLJ7f2bdM.jpg", category: "Vegetables", rating: 4.6 },
+        { id: 4, name: "Organic Spinach", unit: "1kg", supplier: "GreenLeaf", price: 90.00, imageUrl: "https://t4.ftcdn.net/jpg/13/62/58/31/240_F_1362583148_tWI7pBDk6gQ5FOIxSaumxjWvRt37Vfk6.jpg", category: "Vegetables", rating: 4.8 },
+        { id: 5, name: "Carrots", unit: "5kg", supplier: "FarmFresh", price: 125.00, imageUrl: "https://t3.ftcdn.net/jpg/02/53/10/70/240_F_253107053_qq5Q41Bd2V99ESZHkpODi41Sj7MqSQw9.jpg", category: "Vegetables", rating: 4.4 },
+        { id: 11, name: "Beans", unit: "2kg", supplier: "VegMart", price: 120.00, imageUrl: "https://t3.ftcdn.net/jpg/00/94/76/02/240_F_94760227_iRbMSzi8SbuGeDJJQfltdS3kY8EYHqwp.jpg", category: "Vegetables", rating: 4.5 },
+        { id: 12, name: "Cauliflower", unit: "5kg", supplier: "FarmFresh", price: 100.00, imageUrl: "https://t4.ftcdn.net/jpg/11/80/19/75/240_F_1180197564_KWrKHUw7JI7vmtbmUT4j6frKCf9HkKdZ.jpg", category: "Vegetables", rating: 4.3 },
+        { id: 13, name: "Cabbage", unit: "2kg", supplier: "AgriBazaar", price: 70.00, imageUrl: "https://t3.ftcdn.net/jpg/01/28/34/56/240_F_128345693_lWJ1FffZIOIOdRrXlUtachhxGZPLRRW3.jpg", category: "Vegetables", rating: 4.2 },
+        { id: 14, name: "Capsicum", unit: "2kg", supplier: "GreenLeaf", price: 70.00, imageUrl: "https://t3.ftcdn.net/jpg/01/01/06/94/240_F_101069451_91kWjNXdA9dPrag5qyRX2ah0rmgAfdee.jpg", category: "Vegetables", rating: 4.6 },
+        { id: 15, name: "Green Peas", unit: "3kg", supplier: "VegMart", price: 250.00, imageUrl: "https://t4.ftcdn.net/jpg/01/98/58/99/240_F_198589944_d8zp9S55wWMy03cC1oHDYI5ZB1qAdYj6.jpg", category: "Vegetables", rating: 4.7 },
+        { id: 16, name: "Small Onion", unit: "5kg", supplier: "FarmFresh", price: 250.00, imageUrl: "https://t4.ftcdn.net/jpg/13/78/48/33/240_F_1378483389_8Ll8eIBY7YC4J1XhQAj4wjvPAfw6jMWx.jpg", category: "Vegetables", rating: 4.8 },
+        { id: 17, name: "Ginger", unit: "1kg", supplier: "AgriBazaar", price: 150.00, imageUrl: "https://t4.ftcdn.net/jpg/03/84/94/13/240_F_384941354_Vv0UJzPSCDTfMRldVp68HlECb9ZEhhA3.jpg", category: "Vegetables", rating: 4.5 },
+        { id: 18, name: "Garlic", unit: "1kg", supplier: "GreenLeaf", price: 150.00, imageUrl: "https://t4.ftcdn.net/jpg/04/97/66/75/240_F_497667519_ae13UCMJHdyd6Hu7OJkssy3caQB8xk1B.jpg", category: "Vegetables", rating: 4.6 },
+        { id: 19, name: "Coriander Leaves", unit: "3 bunch", supplier: "VegMart", price: 50.00, imageUrl: "https://t3.ftcdn.net/jpg/03/92/73/08/240_F_392730877_Msk4wJUOHimonpooDzbYpLaOts7BXVlj.jpg", category: "Vegetables", rating: 4.7 },
+        { id: 20, name: "Mushroom", unit: "2kg", supplier: "FarmFresh", price: 80.00, imageUrl: "https://t4.ftcdn.net/jpg/01/33/20/99/240_F_133209976_FMW9u2TYDTmp50SuTCTqzg6Bu1vzVKTa.jpg", category: "Vegetables", rating: 4.4 },
+        { id: 6, name: "Basmati Rice", unit: "10kg", supplier: "GrainHouse", price: 900.00, imageUrl: "https://t4.ftcdn.net/jpg/03/09/22/29/240_F_309222978_boIWb07TufCqJ8al1keo6nnXASPsXPsy.jpg", category: "Grains", rating: 4.9 },
+        { id: 8, name: "All-Purpose Flour", unit: "5kg", supplier: "HarvestMills", price: 225.00, imageUrl: "https://t4.ftcdn.net/jpg/00/48/63/21/240_F_48632181_gyge2ZGmHt998NijZEUFLWy40Ph5boc8.jpg", category: "Grains", rating: 4.7 },
+        { id: 10, name: "Red Lentils", unit: "5kg", supplier: "GrainHouse", price: 600.00, imageUrl: "https://placehold.co/400x400/d62828/ffffff?text=Lentils", category: "Grains", rating: 4.6 },
+        { id: 21, name: "Wheat", unit: "5kg", supplier: "HarvestMills", price: 200.00, imageUrl: "https://t3.ftcdn.net/jpg/00/78/71/04/240_F_78710437_MatipaCWmj9qTRaKfJNxnp50yUth3N9F.jpg", category: "Grains", rating: 4.8 },
+        { id: 22, name: "Maida", unit: "3kg", supplier: "GrainHouse", price: 50.00, imageUrl: "https://placehold.co/400x400/f8f9fa/000000?text=Maida", category: "Grains", rating: 4.5 },
+        { id: 23, name: "Normal Rice", unit: "5kg", supplier: "HarvestMills", price: 300.00, imageUrl: "https://t4.ftcdn.net/jpg/01/28/51/05/240_F_128510556_eGGpqOLpEcsLoNIUBaFkMJ2ZTHNQLDXp.jpg", category: "Grains", rating: 4.4 },
+        { id: 24, name: "Chick Peas", unit: "1kg", supplier: "GrainHouse", price: 90.00, imageUrl: "https://t3.ftcdn.net/jpg/01/38/37/88/240_F_138378802_ATvZn6NeDmFpymsJGluZEwhOQr6Qx4Py.jpg", category: "Grains", rating: 4.6 },
+        { id: 7, name: "Sunflower Oil", unit: "10L", supplier: "PurePress", price: 1500.00, imageUrl: "https://t4.ftcdn.net/jpg/01/22/33/85/240_F_122338595_k7xYszk3mxf8O8Ho67lHMifx4EANtZpU.jpg", category: "Oils", rating: 4.3 },
+        { id: 25, name: "Fortune Oil", unit: "10L", supplier: "OilMax", price: 2400.00, imageUrl: "https://placehold.co/400x400/ffd166/000000?text=Fortune+Oil", category: "Oils", rating: 4.8 },
+        { id: 26, name: "Sesame Oil", unit: "10L", supplier: "PurePress", price: 1000.00, imageUrl: "https://placehold.co/400x400/e07a5f/ffffff?text=Sesame+Oil", category: "Oils", rating: 4.7 },
+        { id: 27, name: "Normal Oil", unit: "10L", supplier: "OilMax", price: 1700.00, imageUrl: "https://t3.ftcdn.net/jpg/01/20/99/42/240_F_120994288_gmidv6tqVPrNHYLZJtnHI7xKKUqR3Fga.jpg", category: "Oils", rating: 4.2 },
+        { id: 9, name: "Turmeric Powder", unit: "200g", supplier: "SpiceCo", price: 60.00, imageUrl: "https://t3.ftcdn.net/jpg/04/40/62/24/240_F_440622470_XVQOFSIdh0cccmwmPjO7czorNth3W0U1.jpg", category: "Spices", rating: 4.8 },
+        { id: 29, name: "Chilli Powder", unit: "500g", supplier: "MasalaMagic", price: 200.00, imageUrl: "https://t3.ftcdn.net/jpg/04/98/21/28/240_F_498212891_Gf3f74VZGVGxWq4vkk4zIer0n0HVihA6.jpg", category: "Spices", rating: 4.7 },
+        { id: 30, name: "Coriander Powder", unit: "500g", supplier: "SpiceCo", price: 150.00, imageUrl: "https://t3.ftcdn.net/jpg/01/71/15/82/240_F_171158242_RZvbuevbVOaSNTSgyKv8hNNxknEO4ccL.jpg", category: "Spices", rating: 4.6 },
+        { id: 31, name: "Pepper Powder", unit: "200g", supplier: "MasalaMagic", price: 90.00, imageUrl: "https://t4.ftcdn.net/jpg/12/17/96/23/240_F_1217962353_IPCMmHJeF9XTb9zZFbNz0aZrTBpWH0mA.jpg", category: "Spices", rating: 4.8 },
+        { id: 32, name: "Chilli", unit: "100g", supplier: "SpiceCo", price: 70.00, imageUrl: "https://t4.ftcdn.net/jpg/00/59/08/49/240_F_59084931_uwNJ5fPSLXg7aYXdTdQIX6G41GTvctmM.jpg", category: "Spices", rating: 4.5 },
+        { id: 28, name: "Butter", unit: "500g", supplier: "DairyFresh", price: 250.00, imageUrl: "https://t3.ftcdn.net/jpg/02/40/14/70/240_F_240147049_1DKgPqORVBXfHdqh7YZvCgDbQl7LVptM.jpg", category: "Bread & Dairy", rating: 4.9 },
+        { id: 33, name: "Bread", unit: "5 packets", supplier: "bakeryWorld", price: 200.00, imageUrl: "https://lh3.googleusercontent.com/gg-dl/AJfQ9KShDxeqyR2XS5GMQ_Am1LM6eHRcPwPJS9QhXiSH0_lxLkTmjuRm2Lcr8oreG6WR6m66f8wJjXW1T3MEHMznrX3QY6w6Y_zeRHLEj9Bx6fDDfZQAJqi1U41Dd9g915Mt9ROyHRU4UjnmriEy-0RdkqtpiPFXuzJPZrdyn6XREUEFDcb1Jw", category: "Bread & Dairy", rating: 4.6 },
+        { id: 34, name: "Egg", unit: "50pcs", supplier: "PoultryFarms", price: 275.00, imageUrl: "https://t4.ftcdn.net/jpg/05/61/14/57/240_F_561145721_z82srtNf0oJHsWAc1P2JVmr6jWeMgqq3.jpg", category: "Bread & Dairy", rating: 4.8 }
+      ];
+
+      // --- STATE ---
+      let cart = [];
+      let wishlist = [];
+      let currentFilter = 'All';
+      let currentSearchTerm = '';
+      let userProfile = {
+        name: 'John Doe',
+        phone: '+91 98765 43210',
+        address: '123, Tech Park Road, Silicon Valley, Chennai, Tamil Nadu - 600001'
+      };
+
+      // --- SELECTORS ---
+      const productView = document.getElementById('product-view');
+      const checkoutView = document.getElementById('checkout-view');
+      const productGrid = document.getElementById('product-grid');
+      const cartCountElement = document.getElementById('cart-count');
+      const wishlistCountElement = document.getElementById('wishlist-count');
+      const toastElement = document.getElementById('toast');
+      const categoryNav = document.getElementById('category-nav');
+      const pageTitle = document.getElementById('page-title');
+      const searchBar = document.getElementById('search-bar');
+      const cartNavBtn = document.getElementById('cart-nav-btn');
+      const cartSidebar = document.getElementById('cart-sidebar');
+      const cartOverlay = document.getElementById('cart-overlay');
+      const closeCartBtn = document.getElementById('close-cart-btn');
+      const cartItemsContainer = document.getElementById('cart-items-container');
+      const grandTotalElement = document.getElementById('grand-total');
+      const emptyCartMessage = document.getElementById('empty-cart-message');
+      const wishlistNavBtn = document.getElementById('wishlist-nav-btn');
+      const wishlistSidebar = document.getElementById('wishlist-sidebar');
+      const wishlistOverlay = document.getElementById('wishlist-overlay');
+      const closeWishlistBtn = document.getElementById('close-wishlist-btn');
+      const wishlistItemsContainer = document.getElementById('wishlist-items-container');
+      const emptyWishlistMessage = document.getElementById('empty-wishlist-message');
+      const proceedToCheckoutBtn = document.getElementById('proceed-to-checkout-btn');
+      const backToShopBtn = document.getElementById('back-to-shop-btn');
+      const placeOrderBtn = document.getElementById('place-order-btn');
+      const summaryItemCount = document.getElementById('summary-item-count');
+      const summaryItemTotal = document.getElementById('summary-item-total');
+      const summaryGrandTotal = document.getElementById('summary-grand-total');
+      const profileNavBtn = document.getElementById('profile-nav-btn');
+      const profileModalOverlay = document.getElementById('profile-modal-overlay');
+      const profileModal = document.getElementById('profile-modal');
+      const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+      const cancelProfileBtn = document.getElementById('cancel-profile-btn');
+      const profileForm = document.getElementById('profile-form');
+      const profileNameInput = document.getElementById('profile-name');
+      const profilePhoneInput = document.getElementById('profile-phone');
+      const profileAddressInput = document.getElementById('profile-address');
+      const displayName = document.getElementById('display-name');
+      const displayAddress = document.getElementById('display-address');
+      const displayPhone = document.getElementById('display-phone');
+      const changeAddressBtn = document.getElementById('change-address-btn');
+
+      // --- FUNCTIONS ---
+
+      function switchView(viewName) {
+        if (viewName === 'checkout') {
+          productView.classList.add('hidden');
+          checkoutView.classList.remove('hidden');
+          renderCheckoutSummary();
+        } else {
+          checkoutView.classList.add('hidden');
+          productView.classList.remove('hidden');
+        }
+        window.scrollTo(0, 0);
+      }
+
+      function renderProducts() {
+        if (!productGrid) return;
+        const filteredProducts = products.filter(p => (currentFilter === 'All' || p.category === currentFilter) && (p.name.toLowerCase().includes(currentSearchTerm.toLowerCase()) || p.supplier.toLowerCase().includes(currentSearchTerm.toLowerCase())));
+        if (filteredProducts.length === 0) {
+            productGrid.innerHTML = `<div class="col-span-full text-center py-12"><h3 class="text-2xl font-semibold text-gray-600">No products found</h3><p class="text-gray-500 mt-2">Try adjusting your search or filters.</p></div>`;
+            return;
+        }
+        productGrid.innerHTML = filteredProducts.map(product => {
+          const isInWishlist = wishlist.includes(product.id);
+          return `
+            <div class="bg-white shadow-md rounded-lg overflow-hidden group transition-all duration-300 hover:shadow-xl flex flex-col">
+              <div class="relative">
+                <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-56 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x400/cccccc/ffffff?text=Image+Not+Found';">
+                <button data-product-id="${product.id}" class="wishlist-btn absolute top-3 right-3 bg-white/70 backdrop-blur-sm p-2 rounded-full text-gray-600 hover:text-red-500 transition-colors ${isInWishlist ? 'active' : ''}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"></path></svg>
+                </button>
+              </div>
+              <div class="p-4 flex flex-col flex-grow">
+                <p class="text-sm text-gray-500">${product.supplier}</p>
+                <h3 class="text-md font-bold text-gray-800 truncate mt-1">${product.name} (${product.unit})</h3>
+                <div class="flex items-center mt-2">
+                    <div class="flex items-center text-yellow-500">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                        <span class="text-gray-600 font-semibold ml-1">${product.rating}</span>
+                    </div>
+                </div>
+                <div class="flex-grow"></div>
+                <div class="flex justify-between items-center mt-4">
+                  <p class="text-lg font-extrabold text-gray-900">₹${product.price.toFixed(2)}</p>
+                  <button data-product-id="${product.id}" class="add-to-cart-btn bg-yellow-400 text-gray-900 font-bold px-4 py-2 rounded-lg hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 transition-transform transform hover:scale-105">
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      function renderCategories() {
+          const categories = ['All', ...new Set(products.map(p => p.category))];
+          categoryNav.innerHTML = categories.map(cat => `<button class="category-btn text-gray-600 py-1 px-2 border-b-2 border-transparent hover:text-yellow-600 transition-colors whitespace-nowrap ${cat === currentFilter ? 'active' : ''}" data-category="${cat}">${cat}</button>`).join('');
+      }
+
+      function updateCounts() {
+        cartCountElement.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+        wishlistCountElement.textContent = wishlist.length;
+      }
+      
+      function showToast(message) {
+          toastElement.textContent = message;
+          toastElement.classList.remove('opacity-0', 'translate-y-24');
+          setTimeout(() => { toastElement.classList.add('opacity-0', 'translate-y-24'); }, 2500);
+      }
+      
+      function addToCart(productId) {
+          const product = products.find(p => p.id === productId);
+          if (!product) return;
+          const cartItem = cart.find(item => item.id === productId);
+          if (cartItem) { cartItem.quantity++; } else { cart.push({ ...product, quantity: 1 }); }
+          updateCartView();
+          showToast(`${product.name} added to cart!`);
+      }
+
+      function updateCartView() {
+          if (cart.length === 0) {
+              emptyCartMessage.classList.remove('hidden');
+              cartItemsContainer.innerHTML = '';
+              cartItemsContainer.appendChild(emptyCartMessage);
+          } else {
+              emptyCartMessage.classList.add('hidden');
+              cartItemsContainer.innerHTML = cart.map(item => `
+                  <div class="flex items-center justify-between py-3 border-b">
+                      <img src="${item.imageUrl}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error';">
+                      <div class="flex-grow px-3">
+                          <h4 class="font-semibold text-sm">${item.name}</h4>
+                          <p class="text-xs text-gray-500">₹${item.price.toFixed(2)} x ${item.quantity}</p>
+                          <p class="font-bold text-sm">₹${(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                      <button data-product-id="${item.id}" class="remove-from-cart-btn text-red-500 hover:text-red-700 p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                  </div>`).join('');
+          }
+          const grandTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+          grandTotalElement.textContent = `₹${grandTotal.toFixed(2)}`;
+          updateCounts();
+      }
+
+      function renderCheckoutSummary() {
+          const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+          const totalValue = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+          summaryItemCount.textContent = `Item Total (${totalItems} items)`;
+          summaryItemTotal.textContent = `₹${totalValue.toFixed(2)}`;
+          summaryGrandTotal.textContent = `₹${totalValue.toFixed(2)}`;
+      }
+
+      function updateWishlistView() {
+          if (wishlist.length === 0) {
+              emptyWishlistMessage.classList.remove('hidden');
+              wishlistItemsContainer.innerHTML = '';
+              wishlistItemsContainer.appendChild(emptyWishlistMessage);
+          } else {
+              emptyWishlistMessage.classList.add('hidden');
+              wishlistItemsContainer.innerHTML = wishlist.map(productId => {
+                  const item = products.find(p => p.id === productId);
+                  return `
+                  <div class="flex items-center justify-between py-3 border-b">
+                      <img src="${item.imageUrl}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error';">
+                      <div class="flex-grow px-3">
+                          <h4 class="font-semibold text-sm">${item.name}</h4>
+                          <p class="text-xs text-gray-500">${item.supplier}</p>
+                          <p class="font-bold text-sm">₹${item.price.toFixed(2)}</p>
+                      </div>
+                      <button data-product-id="${item.id}" class="remove-from-wishlist-btn text-red-500 hover:text-red-700 p-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                  </div>`;
+              }).join('');
+          }
+          updateCounts();
+      }
+
+      function toggleSidebar(type, forceClose = false) {
+          const sidebar = type === 'cart' ? cartSidebar : wishlistSidebar;
+          const overlay = type === 'cart' ? cartOverlay : wishlistOverlay;
+          const isOpen = !sidebar.classList.contains('translate-x-full');
+          
+          if (isOpen || forceClose) {
+              sidebar.classList.add('translate-x-full');
+              overlay.classList.add('opacity-0');
+              setTimeout(() => overlay.classList.add('hidden'), 300);
+          } else {
+              if (type === 'cart') updateCartView(); else updateWishlistView();
+              overlay.classList.remove('hidden');
+              setTimeout(() => {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('opacity-0');
+              }, 10);
+          }
+      }
+
+      function toggleProfileModal(forceClose = false) {
+        const isOpen = !profileModal.classList.contains('hidden');
+        if (isOpen || forceClose) {
+          profileModal.classList.add('opacity-0', 'scale-95');
+          profileModalOverlay.classList.add('opacity-0');
+          setTimeout(() => {
+            profileModal.classList.add('hidden');
+            profileModalOverlay.classList.add('hidden');
+          }, 300);
+        } else {
+          profileNameInput.value = userProfile.name;
+          profilePhoneInput.value = userProfile.phone;
+          profileAddressInput.value = userProfile.address;
+          profileModal.classList.remove('hidden');
+          profileModalOverlay.classList.remove('hidden');
+          setTimeout(() => {
+            profileModal.classList.remove('opacity-0', 'scale-95');
+            profileModalOverlay.classList.remove('opacity-0');
+          }, 10);
+        }
+      }
+
+      function updateProfileDisplay() {
+        displayName.textContent = userProfile.name;
+        displayPhone.textContent = `Phone: ${userProfile.phone}`;
+        displayAddress.textContent = userProfile.address;
+      }
+
+      // --- EVENT LISTENERS ---
+      
+      productGrid.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const productId = parseInt(target.dataset.productId);
+        if (target.classList.contains('add-to-cart-btn')) {
+          addToCart(productId);
+        } else if (target.classList.contains('wishlist-btn')) {
+          target.classList.toggle('active');
+          if (wishlist.includes(productId)) {
+              wishlist = wishlist.filter(id => id !== productId);
+              showToast('Removed from wishlist.');
+          } else {
+              wishlist.push(productId);
+              showToast('Added to wishlist!');
+          }
+          updateWishlistView();
+        }
+      });
+      
+      cartItemsContainer.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('.remove-from-cart-btn');
+          if (removeBtn) {
+              const productId = parseInt(removeBtn.dataset.productId);
+              cart = cart.filter(item => item.id !== productId);
+              updateCartView();
+          }
+      });
+
+      wishlistItemsContainer.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('.remove-from-wishlist-btn');
+          if (removeBtn) {
+              const productId = parseInt(removeBtn.dataset.productId);
+              wishlist = wishlist.filter(id => id !== productId);
+              updateWishlistView();
+              renderProducts();
+          }
+      });
+      
+      categoryNav.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON') {
+              currentFilter = e.target.dataset.category;
+              pageTitle.textContent = `${currentFilter} Products`;
+              document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+              e.target.classList.add('active');
+              renderProducts();
+          }
+      });
+      
+      searchBar.addEventListener('input', (e) => {
+          currentSearchTerm = e.target.value;
+          renderProducts();
+      });
+
+      cartNavBtn.addEventListener('click', () => toggleSidebar('cart'));
+      closeCartBtn.addEventListener('click', () => toggleSidebar('cart'));
+      cartOverlay.addEventListener('click', () => toggleSidebar('cart'));
+
+      wishlistNavBtn.addEventListener('click', () => toggleSidebar('wishlist'));
+      closeWishlistBtn.addEventListener('click', () => toggleSidebar('wishlist'));
+      wishlistOverlay.addEventListener('click', () => toggleSidebar('wishlist'));
+
+      proceedToCheckoutBtn.addEventListener('click', () => {
+        if (cart.length > 0) {
+            toggleSidebar('cart', true);
+            switchView('checkout');
+        } else {
+            showToast('Your cart is empty!');
+        }
+      });
+
+      backToShopBtn.addEventListener('click', () => switchView('products'));
+      
+      placeOrderBtn.addEventListener('click', () => {
+        showToast('Order placed successfully!');
+        cart = [];
+        updateCartView();
+        setTimeout(() => {
+          switchView('products');
+        }, 1000);
+      });
+      
+      document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', () => {
+          document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+        });
+      });
+
+      // Profile Modal Listeners
+      profileNavBtn.addEventListener('click', () => toggleProfileModal());
+      changeAddressBtn.addEventListener('click', () => toggleProfileModal());
+      closeProfileModalBtn.addEventListener('click', () => toggleProfileModal(true));
+      cancelProfileBtn.addEventListener('click', () => toggleProfileModal(true));
+      profileModalOverlay.addEventListener('click', () => toggleProfileModal(true));
+
+      profileForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        userProfile.name = profileNameInput.value;
+        userProfile.phone = profilePhoneInput.value;
+        userProfile.address = profileAddressInput.value;
+        updateProfileDisplay();
+        toggleProfileModal(true);
+        showToast('Profile updated successfully!');
+      });
+
+      // --- INITIALIZATION ---
+      renderCategories();
+      renderProducts();
+      updateCartView();
+      updateWishlistView();
+      updateProfileDisplay();
+      switchView('products');
+    });
+  </script>
+
+</body>
+</html>
